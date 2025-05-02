@@ -1,0 +1,92 @@
+
+services:
+  qbittorrent:
+    image: linuxserver/qbittorrent:4.5.2
+    container_name: qbittorrent
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+      - "6881:6881"
+      - "6881:6881/udp"
+    volumes:
+      - qbittorrent_config:/config
+      - torrents_data:/downloads
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Paris
+      - WEBUI_PORT=8080
+    networks:
+      - fileshare_net
+  ftp:
+    image: stilliard/pure-ftpd:1.0.49
+    container_name: ftp
+    restart: unless-stopped
+    ports:
+      - "21:21"
+      - "30000-30009:30000-30009" # Passive ports
+    volumes:
+      - torrents_data:/home/ftpusers/myuser
+    environment:
+      - TZ=Europe/Paris
+      - PUBLICHOST=172.30.219.204
+      - FTP_USER_NAME=myuser
+      - FTP_USER_PASS=mypassword
+      - FTP_USER_HOME=/home/ftpusers/myuser
+    networks:
+      - fileshare_net
+
+  gitlab:
+     image: gitlab/gitlab-ce:latest
+     container_name: gitlab
+     restart: unless-stopped
+     ports:
+       - "8929:80"
+       - "2224:22"
+     volumes:
+       - gitlab_config:/etc/gitlab
+       - gitlab_logs:/var/log/gitlab
+       - gitlab_data:/var/opt/gitlab
+     environment:
+       - TZ=Europe/Paris
+       - GITLAB_OMNIBUS_CONFIG="external_url 'http://localhost:8929'; gitlab_rails['gitlab_shell_ssh_port'] = 2224;"
+     shm_size: '256m'
+     networks:
+       - fileshare_net
+
+
+networks:
+  fileshare_net:
+    driver: bridge
+
+volumes:
+  qbittorrent_config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${APPDATA_PATH}/qBittorrent
+  torrents_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${TORRENTS_DATA_PATH}
+  gitlab_config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${APPDATA_PATH}/gitlab/config
+  gitlab_logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${APPDATA_PATH}/gitlab/logs
+  gitlab_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${APPDATA_PATH}/gitlab/data
