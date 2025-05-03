@@ -21,6 +21,21 @@ services:
     devices:
       - /dev/net/tun
 
+  samba:
+    image: dperson/samba
+    container_name: samba
+    volumes:
+      - torrents_data:/shared
+      - ./smb.conf:/etc/samba/smb.conf:ro
+    ports:
+      - "139:139"
+      - "445:445"
+    restart: unless-stopped
+    networks:
+      - fileshare_net
+    command: >
+      -u "${SAMBA_USER};${SAMBA_PASSWORD}"
+
 networks:
   fileshare_net:
     driver: bridge
@@ -38,3 +53,4 @@ volumes:
       type: none
       o: bind
       device: ${TORRENTS_DATA_PATH}
+
