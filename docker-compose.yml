@@ -1,60 +1,28 @@
 services:
   qbittorrent:
-    image: linuxserver/qbittorrent:4.5.2
+    image: trigus42/qbittorrentvpn
     container_name: qbittorrent
-    restart: unless-stopped
-    ports:
-      - "8080:8080"
-      - "6881:6881"
-      - "6881:6881/udp"
+    environment:
+      - VPN_TYPE=openvpn
+      - VPN_USERNAME=${CYBERGHOST_USER}
+      - VPN_PASSWORD=${CYBERGHOST_PASSWORD}
+      - WEBUI_PASSWORD=Qbitms302p!
     volumes:
       - qbittorrent_config:/config
       - torrents_data:/downloads
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Paris
-      - WEBUI_PORT=8080
-    networks:
-      - vpn_net
-  ftp:
-    image: stilliard/pure-ftpd:1.0.49
-    container_name: ftp
-    restart: unless-stopped
     ports:
-      - "21:21"
-      - "30000-30009:30000-30009" # Passive ports
-    volumes:
-      - torrents_data:/home/ftpusers/myuser
-    environment:
-      - TZ=Europe/Paris
-      - PUBLICHOST=172.30.219.204
-      - FTP_USER_NAME=myuser
-      - FTP_USER_PASS=mypassword
-      - FTP_USER_HOME=/home/ftpusers/myuser
-    networks:
-      - fileshare_net
-      
-  vpn:
-    image: dperson/openvpn-client
-    container_name: vpn
+      - "8080:8080"
+    restart: unless-stopped
     cap_add:
       - NET_ADMIN
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+      - net.ipv6.conf.all.disable_ipv6=0
     devices:
       - /dev/net/tun
-    restart: unless-stopped
-    environment:
-      - TZ=Europe/Paris
-    volumes:
-      - ./vpn-config:/vpn
-    command: "-f '' -r '192.168.1.0/24'" # Adjust routing as needed
-    networks:
-      - vpn_net
 
 networks:
   fileshare_net:
-    driver: bridge
-  vpn_net:
     driver: bridge
 
 volumes:
@@ -70,4 +38,3 @@ volumes:
       type: none
       o: bind
       device: ${TORRENTS_DATA_PATH}
-
