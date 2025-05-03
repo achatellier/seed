@@ -6,7 +6,7 @@ services:
       - VPN_TYPE=openvpn
       - VPN_USERNAME=${CYBERGHOST_USER}
       - VPN_PASSWORD=${CYBERGHOST_PASSWORD}
-      - WEBUI_PASSWORD=Qbitms302p!
+      - WEBUI_PASSWORD=${WEBUI_PASSWORD}
     volumes:
       - qbittorrent_config:/config
       - torrents_data:/downloads
